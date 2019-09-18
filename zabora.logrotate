@@ -1,0 +1,16 @@
+/var/log/zabbix/zabora.log {
+    compress
+    dateext
+    maxage 365
+    rotate 10
+    size=+16M
+    notifempty
+    missingok
+    create 640 zabbix zabbix
+    su zabbix zabbix
+    postrotate
+     systemctl restart zabora.service
+     sleep 10
+    endscript
+}
+

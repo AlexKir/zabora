@@ -1,0 +1,20 @@
+[Unit]
+Description=Zabora service
+ConditionPathExists=/etc/zabbix/zabora-go/zabora
+After=network.target
+ 
+[Service]
+Type=notify
+User=zabbix
+Group=zabbix
+LimitNOFILE=1024
+
+Restart=on-failure
+RestartSec=10
+startLimitIntervalSec=60
+
+WorkingDirectory=/etc/zabbix/zabora-go
+ExecStart=/etc/zabbix/zabora-go/zabora
+ 
+[Install]
+WantedBy=multi-user.target

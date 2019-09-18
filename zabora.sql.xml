@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- sql must return one row and one column with name retvalue -->
+<sql_list>
+<sql item_key="connect">
+	select 1 as retvalue from dual
+</sql>
+<sql item_key="checkactive">
+ select to_char(case when inst_cnt > 0 then 1 else 0 end,'FM99999999999999990') retvalue
+ from (select count(*) inst_cnt from v$instance 
+ where status = 'OPEN' and logins = 'ALLOWED' and database_status = 'ACTIVE')
+</sql>
+<sql item_key="rcachehit">
+ SELECT to_char((1 - (phy.value - lob.value - dir.value) / ses.value) * 100, 'FM99999990.9990') retvalue
+ FROM   v$sysstat ses, v$sysstat lob, v$sysstat dir, v$sysstat phy
+ WHERE  ses.name = 'session logical reads'
+  AND    dir.name = 'physical reads direct'
+  AND    lob.name = 'physical reads direct (lob)'
+  AND    phy.name = 'physical reads'
+</sql>
+<sql item_key="dsksortratio">
+  SELECT to_char(d.value/(d.value + m.value)*100, 'FM99999990.9990') retvalue
+  FROM  v$sysstat m, v$sysstat d
+  WHERE m.name = 'sorts (memory)'
+    AND d.name = 'sorts (disk)'
+</sql>
+<sql item_key="activeusercount">
+select to_char(count(*)-1, 'FM99999999999999990') retvalue from v$session where wait_class not like 'Idle' and status='ACTIVE'
+</sql>
+<sql item_key="usercount">
+ select to_char(count(*)-1, 'FM99999999999999990') retvalue from v$session where username is not null
+</sql>
+<sql item_key="dbsize">
+ SELECT to_char(sum(t1.USED_SPACE*8*1024),'FM99999999999999990') retvalue 
+ FROM dba_tablespace_usage_metrics t1      
+ WHERE t1.TABLESPACE_NAME not in ('SYSTEM','SYSAUX')
+  and t1.TABLESPACE_NAME in (SELECT t2.TABLESPACE_NAME from dba_tablespaces t2 WHERE contents = 'PERMANENT')
+</sql>
+<sql item_key="dbfilesize">
+ select to_char(sum(bytes), 'FM99999999999999990') retvalue from dba_data_files
+</sql>
+<sql item_key="version">
+ select banner as retvalue from v$version where rownum=1
+</sql>
+<sql item_key="psu">
+SELECT nvl(max(comments),'0') as retvalue 
+  FROM (SELECT h1.*, rank() over (partition by h1.bundle_series order by h1.action_time desc) rnk
+  FROM sys.registry$history h1
+  where h1.bundle_series = 'PSU' and h1.action = 'APPLY' )
+  WHERE rnk = 1
+</sql>
+<sql item_key="psu12">
+SELECT nvl(max(description),'0') as retvalue
+  FROM (SELECT h2.*, rank() over (partition by h2.bundle_series order by h2.action_time desc) rnk
+  FROM DBA_REGISTRY_SQLPATCH h2
+  where h2.bundle_series in ('DBRU','PSU') and h2.action = 'APPLY' )
+  WHERE rnk = 1
+</sql>
+<sql item_key="uptime">
+        select to_char((sysdate-startup_time)*86400, 'FM99999999999999990') retvalue from v$instance
+</sql>
+<sql item_key="commits">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'user commits'
+</sql>
+<sql item_key="rollbacks">
+   select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'user rollbacks'
+</sql>
+<sql item_key="deadlocks">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'enqueue deadlocks'
+</sql>
+<sql item_key="redowrites">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'redo writes'
+</sql>
+<sql item_key="logreads">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'session logical reads'
+</sql>
+<sql item_key="physreadsdirect">
+    select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'physical reads direct'
+</sql>
+<sql item_key="physreadsdirectlob">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'physical reads direct (lob)'
+</sql>
+<sql item_key="physreads">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'physical reads'
+</sql>
+<sql item_key="redosize">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'redo size'
+</sql>
+<sql item_key="tblscans">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'table scans (long tables)'
+</sql>
+<sql item_key="tblrowsscans">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'table scan rows gotten'
+</sql>
+<sql item_key="indexffs">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'index fast full scans (full)'
+</sql>
+<sql item_key="hparsecount">
+ SELECT to_char(s1.VALUE,'FM99999999999999990') retvalue FROM v$sysstat s1 WHERE s1.NAME = 'parse count (hard)'
+</sql>
+<sql item_key="hparsratio">
+ SELECT to_char(h.value/t.value*100,'FM99999990.9990') retvalue
+ FROM  v$sysstat h, v$sysstat t
+ WHERE h.name = 'parse count (hard)'
+  AND t.name = 'parse count (total)'
+</sql>
+<sql item_key="prscpu2prsela">
+ SELECT to_char(100*(c1.VALUE/t1.VALUE),'FM99999990.9990') retvalue
+ FROM  v$sysstat c1, v$sysstat t1
+ WHERE c1.name = 'parse time cpu' AND t1.name = 'parse time elapsed'
+</sql>
+<sql item_key="netsent">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'bytes sent via SQL*Net to client'
+</sql>
+<sql item_key="netresv">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'bytes received via SQL*Net from client'
+</sql>
+<sql item_key="netroundtrips">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'SQL*Net roundtrips to/from client'
+</sql>
+<sql item_key="logonscurrent">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'logons current'
+</sql>
+<sql item_key="lastarclog">
+ select to_char(max(SEQUENCE#), 'FM99999999999999990') retvalue from v$log where archived = 'YES'
+</sql>
+<sql item_key="lastapplarclog">
+ select to_char(max(lh.SEQUENCE#), 'FM99999999999999990') retvalue
+ from v$loghist lh, v$archived_log al
+ where lh.SEQUENCE# = al.SEQUENCE# and applied='YES'
+</sql>
+<sql item_key="stdblag">
+ select to_char(nvl((sysdate - min(max_nt))*24*60*60, 999999), 'FM99999999999999990') retvalue
+ from (select max(al.next_time ) max_nt  from v$archived_log al
+ where applied='YES' and al.DEST_ID in (SELECT d1.DEST_ID FROM v$archive_dest d1 WHERE d1.target = 'STANDBY')
+ group by al.DEST_ID)
+</sql>
+<sql item_key="freebufwaits">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'free buffer waits'
+</sql>
+<sql item_key="bufbusywaits">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'buffer busy waits'
+</sql>
+<sql item_key="readbyotherwaits">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'read by other session'
+</sql>
+<sql item_key="logswcompletion">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'log file switch completion'
+</sql>
+<sql item_key="logfilesync">
+  select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+  from V$system_event se, v$event_name en
+  where se.event(+) = en.name and en.name = 'log file sync'
+</sql>
+<sql item_key="logprllwrite">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'log file parallel write'
+</sql>
+<sql item_key="enqueue">
+ select to_char(sum(nvl(time_waited, 0)), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name LIKE 'enq%'
+</sql>
+<sql item_key="dbseqread">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'db file sequential read'
+</sql>
+<sql item_key="dbscattread">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'db file scattered read'
+</sql>
+<sql item_key="dbsnglwrite">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'db file single write'
+</sql>
+<sql item_key="dbprllwrite">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'db file parallel write'
+</sql>
+<sql item_key="directread">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'direct path read'
+</sql>
+<sql item_key="directwrite">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'direct path write'
+</sql>
+<sql item_key="latchfree">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'latch free'
+</sql>
+<sql item_key="latchsharedpool">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event = en.name and en.name = 'latch: shared pool'
+</sql>
+<sql item_key="msgfromdblink">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'SQL*Net message from dblink'
+</sql>
+<sql item_key="rowcachelock">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'row cache lock'
+</sql>
+<sql item_key="hangingdblink">
+ select to_char(count(*), 'FM99999999999999990') retvalue 
+ from v$session_wait
+ where (event like '%dblink%' or event like '%single-task message%') 
+ and state='WAITING' and seconds_in_wait>3600
+</sql>
+<sql item_key="sessusageratio">
+ select to_char(CURRENT_UTILIZATION/LIMIT_VALUE*100, 'FM99999990.9990') retvalue 
+ from v$resource_limit where RESOURCE_NAME = 'sessions'
+</sql>
+<sql item_key="lowspacecnt">
+ select to_char(count(*), 'FM99999999999999990') retvalue
+ from dba_tablespace_usage_metrics where  used_percent > 90
+  and tablespace_name not like 'UNDO%'
+  -- and tablespace_name not like 'RBS%' 
+  and tablespace_name not like 'SYSAUX%'
+</sql>
+<sql item_key="brknjobscnt">
+ select to_char(count(*), 'FM99999999999999990') retvalue
+ from dba_jobs where BROKEN = 'Y'
+</sql>
+<sql item_key="strmjobsfailcnt">
+ select to_char(nvl(sum(failures),0), 'FM99999999999999990') retvalue
+ from dba_jobs where log_user='STRMADMIN'
+</sql>
+<sql item_key="sumsespgamem">
+ select to_char(sum(stats.value), 'FM99999999999999990') retvalue  
+ from v$sesstat stats, v$statname names 
+ where names.Statistic# = stats.Statistic# and names.name ='session pga memory'
+</sql>
+<sql item_key="sumsesugamem">
+ select to_char(sum(stats.value), 'FM99999999999999990') retvalue
+ from v$sesstat stats, v$statname names
+ where names.Statistic# = stats.Statistic#  and  names.name ='session uga memory'
+</sql>
+<sql item_key="rcvryareausage">
+ SELECT to_char(nvl(sum(SPACE_USED)/sum(SPACE_LIMIT)*100,0), 'FM99999990.9990') retvalue FROM V$RECOVERY_FILE_DEST
+</sql>
+<sql item_key="processusageratio">
+ select to_char(CURRENT_UTILIZATION/LIMIT_VALUE*100, 'FM99999990.9990') retvalue from v$resource_limit where RESOURCE_NAME = 'processes'
+</sql>
+<sql item_key="blockcorruption">
+ select to_char(count(*),'FM99999999999999990') retvalue from V$DATABASE_BLOCK_CORRUPTION
+</sql>
+<sql item_key="fileneedbckpcnt">
+ select to_char(count(*),'FM99999999999999990') retvalue 
+ from v$datafile f1, (select b0.file#,max(b0.CHECKPOINT_TIME) b_checkpoint_time from v$backup_datafile b0 group by b0.FILE# )  b1
+ where f1.FILE# = b1.file#(+) and (((trunc(f1.CHECKPOINT_TIME) - trunc(b1.b_checkpoint_time)) > 3) or b1.b_checkpoint_time is null)
+</sql>
+<sql item_key="fraspaceused">
+ select TO_CHAR(NVL((SELECT sum(SPACE_USED) used FROM V$RECOVERY_FILE_DEST),0),'FM99999999999999990') retvalue from dual
+</sql>
+<sql item_key="dpbrknjobs">
+ SELECT TO_CHAR(count(*),'FM99999999999999990') retvalue FROM dba_datapump_jobs where state = 'NOT RUNNING'
+</sql>
+<sql item_key="forcelogging">
+ SELECT TO_CHAR(count(*),'FM99999999999999990') retvalue FROM v$database where force_logging = 'YES'
+</sql>
+<sql item_key="controlfilebkp">
+ select nvl(to_char((sysdate-max(CHECKPOINT_TIME))*86400, 'FM99999999999999990'),'9999999999999') retvalue from V$BACKUP_CONTROLFILE_DETAILS
+</sql>
+<sql item_key="sharedpoolfree">
+ select TO_CHAR(BYTES,'FM99999999999999990') retvalue from v$sgastat where name = 'free memory' and pool = 'shared pool'
+</sql>
+<sql item_key="sharedpoolfreepct">
+ select TO_CHAR((value),'FM99999999999999990') retvalue from v$sysmetric where group_id = 3 and metric_id = 2114
+</sql>
+<sql item_key="javapoolfree">
+ select TO_CHAR(BYTES,'FM99999999999999990') retvalue from v$sgastat where name = 'free memory' and pool = 'java pool'
+</sql>
+<sql item_key="dbcpu">
+ select TO_CHAR((value/1000000),'FM99999999999999990') retvalue from v$sys_time_model where stat_id = 2748282437
+</sql>
+<sql item_key="dbtime">
+ select TO_CHAR((value/1000000),'FM99999999999999990') retvalue from v$sys_time_model where stat_id = 3649082374
+</sql>
+<sql item_key="sqlexectime">
+ select TO_CHAR((value/1000000),'FM99999999999999990') retvalue from v$sys_time_model where stat_id = 2821698184
+</sql>
+<sql item_key="plsqlexectime">
+  select TO_CHAR((value/1000000),'FM99999999999999990') retvalue from v$sys_time_model where stat_id = 2643905994
+</sql>
+<sql item_key="javaexectime">
+ select TO_CHAR((value/1000000),'FM99999999999999990') retvalue from v$sys_time_model where stat_id = 751169994
+</sql>
+<sql item_key="tempusage">
+ select TO_CHAR(nvl(sum(blocks),0)*8*1024) retvalue from v$tempseg_usage
+</sql>
+<sql item_key="tempusage_pct">
+ <!-- select TO_CHAR(min((t.FREE_SPACE/t.TABLESPACE_SIZE)*100),'FM99999999999999990') retvalue from dba_temp_free_space t -->
+     select round((100 - nvl(100*(u.tot_usage/d.tot_blocks),0))) retvalue FROM
+     (select sum(u.blocks) tot_usage from v$tempseg_usage u) u,
+     (select sum(d.blocks) tot_blocks from dba_temp_files d) d
+</sql>
+<sql item_key="undousage">
+ select TO_CHAR((nvl(sum(BYTES),0)),'FM99999999999999990') retvalue from DBA_UNDO_EXTENTS where status in ('ACTIVE','UNEXPIRED')
+</sql>
+<sql item_key="undopctusage">
+ select TO_CHAR(round(((select nvl(sum(BYTES),0) from DBA_UNDO_EXTENTS where status in ('ACTIVE','UNEXPIRED'))/
+   (select SUM( CASE WHEN AUTOEXTENSIBLE='YES' THEN MAXBYTES ELSE BYTES END)  avsize
+   from dba_data_files s where s.TABLESPACE_NAME = 
+   (select value from v$parameter where name = 'undo_tablespace')))*100),'FM99999999999999990') retvalue from dual
+</sql>
+<sql item_key="directreadtemp">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'direct path read temp'
+</sql>
+<sql item_key="directwritetemp">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'direct path write temp'
+</sql>
+<!--  I/O Megabytes per Second -->
+<sql item_key="iotransfers">
+ select TO_CHAR((value),'FM99999999999999990') retvalue from v$sysmetric where metric_id = 2145
+</sql>
+<!--  I/O Requests per Second -->
+<sql item_key="iorequests">
+ select TO_CHAR((value),'FM99999999999999990') retvalue from v$sysmetric where metric_id = 2146
+</sql>
+<sql item_key="logfileckpt">
+ select to_char(nvl(time_waited, 0), 'FM99999999999999990') retvalue
+ from V$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name = 'log file switch (checkpoint incomplete)'
+</sql>
+<!-- Average size for 20% top pga session, for monitoring session size-->
+<sql item_key="pgausedavg">
+ select to_char(avg(PGA_USED_MEM), 'FM99999999999999990') retvalue 
+ from (select p.PGA_USED_MEM  from v$process p order by 1 desc) where rownum &lt; (select count(*)/5 from v$process)
+</sql>
+<!--        # bclient users count -->
+<sql item_key="bclient_cnt">
+ select to_char(count(*),'FM99999999999999990') retvalue from v$session s where s.USERNAME like 'BCLIENT_%'
+</sql>
+<sql item_key="tm_enqueue">
+ select to_char(sum(nvl(time_waited, 0)), 'FM99999999999999990') retvalue
+ from v$system_event se, v$event_name en
+ where se.event(+) = en.name and en.name LIKE 'enq: TM%'
+</sql>
+<!--# for calculate log switch frequency -->
+<sql item_key="lastlogseq">
+ select to_char(max(SEQUENCE#), 'FM99999999999999990') retvalue from v$log WHERE NEXT_TIME is null
+</sql>
+<!--  pool size -->
+<sql item_key="shared_pool_size">
+ SELECT to_char(t1.CURRENT_SIZE,'FM99999999999999990') retvalue FROM v$memory_dynamic_components t1 WHERE t1.COMPONENT = 'shared pool'
+</sql>
+<sql item_key="buffer_cache_size">
+ SELECT to_char(t1.CURRENT_SIZE,'FM99999999999999990') retvalue FROM v$memory_dynamic_components t1 WHERE t1.COMPONENT = 'DEFAULT buffer cache'
+</sql>
+<sql item_key="java_pool_size">
+ SELECT to_char(t1.CURRENT_SIZE,'FM99999999999999990') retvalue FROM v$memory_dynamic_components t1 WHERE t1.COMPONENT = 'java pool'
+</sql>
+<sql item_key="db_blk_changes">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'db block changes'
+</sql>
+<sql item_key="db_link_sent">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'bytes sent via SQL*Net to dblink'
+</sql>
+<sql item_key="db_link_recv">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'bytes received via SQL*Net from dblink'
+</sql>
+<sql item_key="db_link_roundtrips">
+ select to_char(value, 'FM99999999999999990') retvalue from v$sysstat where name = 'SQL*Net roundtrips to/from dblink'
+</sql>
+<sql item_key="2pc_pending_count">
+ SELECT count(*) FROM dba_2pc_pending where state = 'prepared'
+</sql>
+<sql item_key="backup_status">
+ select count(*) retvalue from V$BACKUP where status='ACTIVE'
+</sql>
+
+<!-- Buffer Cache Hit Ratio / % (LogRead - PhyRead)/LogRead-->
+<sql item_key="buf_cache_hit">
+ select TO_CHAR((value),'FM99999999999999990.999') retvalue from v$sysmetric where group_id = 3 and metric_id = 2000
+</sql>
+<!-- Cursor Cache Hit Ratio / % CursorCacheHit/SoftParse -->
+<sql item_key="cursor_cache_hit">
+ select TO_CHAR((value),'FM99999999999999990.999') retvalue from v$sysmetric where group_id = 2 and metric_id = 2050
+</sql>
+<!-- Row Cache Hit Ratio / % Hits/Gets -->
+<sql item_key="row_cache_hit">
+ select TO_CHAR((value),'FM99999999999999990.999') retvalue from v$sysmetric where group_id = 2 and metric_id = 2110
+</sql>
+<!-- Library Cache Hit Ratio / % Hits/Pins  -->
+<sql item_key="lib_cache_hit">
+ select TO_CHAR((value),'FM99999999999999990.999') retvalue from v$sysmetric where group_id = 3 and metric_id = 2112
+</sql>
+<!-- PGA Cache Hit %	/ % Bytes/TotalBytes -->
+<sql item_key="pga_cache_hit">
+ select TO_CHAR((value),'FM99999999999999990.999') retvalue from v$sysmetric where group_id = 2 and metric_id = 2115
+</sql>
+
+<!-- discovery schema -->
+<sql item_key="schema_discovery">
+SELECT
+ replace(
+  replace
+     (RTRIM('{"data":['||XMLAGG(XMLELEMENT(E,'{"{#SCHEMA}":"' || OWNER || '"}',',').EXTRACT('//text()') ORDER BY OWNER).GetClobVal()||']}',','),
+      '&amp;quot;',
+      '"'),
+ ',]}',
+ ']}')
+AS LIST FROM (select owner from dba_tab_statistics t1 group by t1.owner having sum(t1.BLOCKS) > 100000 /*~800M*/)
+</sql>	
+<sql item_key="schema_size">
+ select NVL(TO_CHAR(sum(bytes),'FM99999999999999990'),0) retvalue from dba_segments where owner = :s 
+</sql>	
+<sql item_key="schema_obj_cnt">
+SELECT count(*) res FROM dba_objects o1 WHERE owner = :s
+</sql>
+<sql item_key="schema_obj_invalid_cnt">
+SELECT count(*) res FROM dba_objects o1 WHERE status = 'INVALID' and owner = :s
+</sql>
+<!-- discovery table space -->
+<sql item_key="tbs_discovery">
+SELECT
+ replace(
+  replace
+     (RTRIM('{"data":['||XMLAGG(XMLELEMENT(E,'{"{#TABLESPACE}":"' || TABLESPACE_NAME || '"}',',').EXTRACT('//text()') ORDER BY TABLESPACE_NAME).GetClobVal()||']}',','),
+      '&amp;quot;',
+      '"'),
+ ',]}',
+ ']}')
+AS LIST FROM dba_tablespace_usage_metrics
+</sql>
+<sql item_key="tbs_used_pct">
+ select USED_PERCENT as retvalue from dba_tablespace_usage_metrics where TABLESPACE_NAME = :S
+</sql>
+<sql item_key="tbs_used_space">
+ select TO_CHAR((m1.USED_SPACE*t1.BLOCK_SIZE),'FM99999999999999990') as retvalue 
+ from dba_tablespace_usage_metrics m1 join dba_tablespaces t1 on m1.TABLESPACE_NAME = t1.TABLESPACE_NAME 
+ where m1.TABLESPACE_NAME = :S
+</sql>
+<!-- For monitor change admin priviliges -->
+<sql item_key="priv_dba_role">
+SELECT listagg(r1.GRANTEE,',') within group (order by r1.GRANTEE) res FROM dba_role_privs r1 WHERE r1.GRANTED_ROLE = 'DBA'
+</sql>
+<sql item_key="priv_alter_sys">
+SELECT listagg(t1.res1,',') within group (order by t1.res1) res
+FROM ( SELECT distinct s1.GRANTEE as res1 FROM dba_sys_privs s1 WHERE s1.privilege = 'ALTER SYSTEM') t1
+</sql>
+<sql item_key="priv_become">
+SELECT listagg(t1.res1,',') within group (order by t1.res1) res
+FROM ( SELECT distinct s1.GRANTEE as res1 FROM dba_sys_privs s1 WHERE s1.privilege = 'BECOME USER') t1
+</sql>
+<sql item_key="priv_proxy_dba">
+SELECT listagg(t1.proxy,',') within group (order by t1.proxy) res
+FROM (SELECT distinct proxy FROM proxy_users WHERE client in (SELECT r1.GRANTEE FROM dba_role_privs r1 WHERE r1.GRANTED_ROLE = 'DBA')) t1
+</sql>
+<sql item_key="priv_sysdba">
+SELECT listagg(username,',') within group (order by username) res FROM v$pwfile_users
+</sql>
+<sql item_key="priv_any">
+SELECT ORA_HASH(listagg(t1.res1) within group (order by t1.res1)) res
+FROM ( SELECT distinct s1.GRANTEE as res1 FROM dba_sys_privs s1 WHERE s1.privilege like '%ANY%') t1
+</sql>
+<!-- test -->
+<sql item_key="test_long_sql">
+ select 1 as retvalue from ( select se.* from v$system_event se, v$event_name en, v$sysstat order by 1) where rownum = 1
+</sql>
+<sql item_key="test_ret2rows">
+ select OWNER from dba_tab_statistics where rownum &lt; 3
+</sql>
+<sql item_key="test_ret0rows">
+ select OWNER from dba_tab_statistics where rownum &lt; 0
+</sql>
+<sql item_key="test_bad_sql">
+ select OWNER
+</sql>
+</sql_list>
