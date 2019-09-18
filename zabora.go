@@ -82,7 +82,7 @@ const (
 	myVERSION   = "0.05"
 	tcpProtocol = "tcp4"
 	tcpAdress   = "0.0.0.0"
-	key         = "key_for_decrypt_passowrd"
+	key         = "key_for_decrypt_password"
 	// https://www.zabbix.com/documentation/1.8/ru/protocols
 	zabHeader       = "ZBXD\x01"
 	zabNotSupported = "ZBX_NOTSUPPORTED\x00"
