@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func DecPass(encPass string, key string) (string, error) {
+func DecPass(encPass string, key []byte) (string, error) {
 	var err error
 	plainpass := encPass
 	var cipherpass []byte
@@ -21,7 +21,7 @@ func DecPass(encPass string, key string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		pass, err = decrypt(cipherpass, []byte(key))
+		pass, err = decrypt(cipherpass, key)
 		plainpass = string(pass)
 	}
 	return plainpass, err
@@ -65,4 +65,3 @@ func decrypt(cipherpass []byte, key []byte) ([]byte, error) {
 	nonce, cipherpass := cipherpass[:nonceSize], cipherpass[nonceSize:]
 	return gcm.Open(nil, nonce, cipherpass, nil)
 }
-
