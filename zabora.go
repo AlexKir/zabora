@@ -28,7 +28,7 @@ type myConfig struct {
 	// Agent configuration
 	Agent struct {
 		Port             string
-		ZabbixServer     string
+		ZabbixServer     []string
 		LogLevel         string
 		LogFile          string
 		SQLFile          []string
@@ -79,7 +79,7 @@ func (c *myCounter) Value() (x int) {
 }
 
 const (
-	myVERSION   = "0.05"
+	myVERSION   = "0.06"
 	tcpProtocol = "tcp4"
 	tcpAdress   = "0.0.0.0"
 	key         = "key_for_decrypt_password"
@@ -219,8 +219,9 @@ func main() {
 		// Проверка входящего адреса
 		// log.Debug("request from address ", conn.RemoteAddr().String())
 		// func SplitHostPort(hostport string) (host, port string, err error)
-		host, _, err = net.SplitHostPort(conn.RemoteAddr().String())
-		if host != cfg.Agent.ZabbixServer {
+		_, found := checkZabbixSrv(cfg.Agent.ZabbixServer,host)
+		// if host != cfg.Agent.ZabbixServer {
+		if !found {
 			log.Error("Block connection from ", host, " accept connection only from ", cfg.Agent.ZabbixServer)
 			conn.Close()
 
@@ -420,4 +421,15 @@ func loadSQLFile(filenames []string) {
 		}
 	}
 	//log.Debug("itemSQL ", itemSQL)
+}
+
+// Find takes a slice and looks for an element in it. If found it will
+// return it's key, otherwise it will return -1 and a bool of false.
+func checkZabbixSrv(slice []string, val string) (int, bool) {
+   for i, item := range slice {
+       if item == val {
+              return i, true
+        }
+    }
+    return -1, false
 }
