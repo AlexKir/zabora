@@ -4,23 +4,30 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path"
+	"zabora/pass"
+
 	//"bufio"
 	"context"
 	"database/sql"
 	"encoding/binary"
 	"errors"
-	"github.com/antchfx/xmlquery"
-	"github.com/coreos/go-systemd/daemon"
-	_ "github.com/mattn/go-oci8"
-	log "github.com/sirupsen/logrus"
-	gcfg "gopkg.in/gcfg.v1"
+	"io/ioutil"
 	"os/signal"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/antchfx/xmlquery"
+	"github.com/coreos/go-systemd/daemon"
+
+	_ "github.com/mattn/go-oci8"
+
+	log "github.com/sirupsen/logrus"
+	gcfg "gopkg.in/gcfg.v1"
 	//my
-	"./pass"
+	//"./pass"
 )
 
 // zabora Config
@@ -79,10 +86,10 @@ func (c *myCounter) Value() (x int) {
 }
 
 const (
-	myVERSION   = "0.05"
+	myVERSION   = "0.06"
 	tcpProtocol = "tcp4"
 	tcpAdress   = "0.0.0.0"
-	key         = "key_for_decrypt_password"
+	//key         = "mykeyforpass1234"
 	// https://www.zabbix.com/documentation/1.8/ru/protocols
 	zabHeader       = "ZBXD\x01"
 	zabNotSupported = "ZBX_NOTSUPPORTED\x00"
@@ -124,6 +131,14 @@ func main() {
 	} else {
 		log.SetLevel(lvl)
 	}
+	keyfilepath := path.Dir(configFile) + "/.zabora.key"
+	key, err := ioutil.ReadFile(keyfilepath)
+	if err != nil {
+		log.Error("Error read file " + keyfilepath + " : " + err.Error())
+	}
+	key = key[:len(key)-1] // remove end of line
+	log.Debug("key : "+string(key)+", key len: ", len(key))
+
 	log.Info("Zabora agent started pid ", os.Getpid())
 	defer log.Info("Zabora agent shutdown", os.Getpid())
 	//log.Debug("cfg ", cfg)
