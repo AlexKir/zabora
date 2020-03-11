@@ -135,9 +135,10 @@ func main() {
 	key, err := ioutil.ReadFile(keyfilepath)
 	if err != nil {
 		log.Error("Error read file " + keyfilepath + " : " + err.Error())
+	} else if len(key) > 0 {
+		key = key[:len(key)-1] // remove end of line
+		log.Debug("key : "+string(key)+", key len: ", len(key))
 	}
-	key = key[:len(key)-1] // remove end of line
-	log.Debug("key : "+string(key)+", key len: ", len(key))
 
 	log.Info("Zabora agent started pid ", os.Getpid())
 	defer log.Info("Zabora agent shutdown", os.Getpid())
@@ -234,7 +235,7 @@ func main() {
 		// Проверка входящего адреса
 		// log.Debug("request from address ", conn.RemoteAddr().String())
 		// func SplitHostPort(hostport string) (host, port string, err error)
-		_, found := checkZabbixSrv(cfg.Agent.ZabbixServer,host)
+		_, found := checkZabbixSrv(cfg.Agent.ZabbixServer, host)
 		// if host != cfg.Agent.ZabbixServer {
 		if !found {
 			log.Error("Block connection from ", host, " accept connection only from ", cfg.Agent.ZabbixServer)
@@ -441,10 +442,10 @@ func loadSQLFile(filenames []string) {
 // Find takes a slice and looks for an element in it. If found it will
 // return it's key, otherwise it will return -1 and a bool of false.
 func checkZabbixSrv(slice []string, val string) (int, bool) {
-   for i, item := range slice {
-       if item == val {
-              return i, true
-        }
-    }
-    return -1, false
+	for i, item := range slice {
+		if item == val {
+			return i, true
+		}
+	}
+	return -1, false
 }

@@ -1,1 +1,2 @@
-export PKG_CONFIG_PATH=/home/ka/go/src/github.com/mattn/go-oci8
+export PKG_CONFIG_PATH=/opt/go/work/src/github.com/mattn/go-oci8
+export LD_LIBRARY_PATH=/opt/go/work/oracle
